@@ -1,12 +1,28 @@
 <!doctype html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-    </head>
-    <body>
-        <p>Hello world! This is HTML5 Boilerplate.</p>
+<head>
+  <meta charset="utf-8">
+    <title></title>
+    <meta name="description" content="">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="contract.js"></script>
+	<script src="index.js"></script>
+	<style>
+	  .navbar {list-style-type: none; margin: 0; padding: 0; overflow: hidden; background-color: #333;}
+	  .navbar li {float: left;}
+	  .navbar * {display: block; color: white; text-align: center; text-decoration: none;}
+	  .navbar li {padding: 15px 20px;}
+	</style>
+      </head>
+      <body>
+      <ul class="navbar">
+	<li>The Pirate Game</li>
+	<li id="status">Status: Loading</li>
+	<li style="float:right" id="account"></li>
+	<li style="float:right" id="balance">Please select one account!</li>
+      </ul>
+      <p>Hello world! This is HTML5 Boilerplate.</p>
+      <dl id="log"></dl>
     </body>
-</html>
+  </html>
+  
