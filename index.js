@@ -1,5 +1,5 @@
 // Insert contract address logged by uploadContract()
-var contractAddress = '0xfeca8715e1fc17ef028effe59fff421271d89350'
+var contractAddress = '0x48a4c09be9764220d86c601e9bd9dc423ecd2674'
 // Compiled contract
 var contractCompiled
 // Contract on blockchain
@@ -9,13 +9,17 @@ var contractInstance
 function init() {
   if (web3.eth.accounts.length===0) {
     document.getElementById("account").innerHTML="No account selected."
+    document.getElementById("status").innerHTML="<span style=\"color: #FF0000\">Status: Error</span>"
+    return false
   } else if (web3.eth.accounts.length===1) {
     web3.eth.defaultAccount=web3.eth.accounts[0]
   } else {
     document.getElementById("account").innerHTML="Multiple accounts selected."
+    document.getElementById("status").innerHTML="<span style=\"color: #FF0000\">Status: Error</span>"
+    return false
   }
   
-   // Compile contract and show errors
+  // Compile contract and show errors
   try {
     contractCompiled = web3.eth.compile.solidity(contractSource)
   }
@@ -27,24 +31,16 @@ function init() {
   log(true, "Compiled contract")
   
   contractInterface = web3.eth.contract(JSON.parse(contractCompiled.Game.interface))
-  contractInstance = instance=contractInterface.at()
+  contractInstance = instance=contractInterface.at(contractAddress)
   
   
 }
 
-function updateInterface(error, sync) {
-  console.log("asdf")
-  //Check status of sync and errors
-  if (sync===true) {
-    document.getElementById("status").innerHTML="Status: Starting sync"
-  } else if (sync===false) {
-    document.getElementById("status").innerHTML="Status: Synced"
-  } else {
-    document.getElementById("status").innerHTML="Status: Syncing ("+(sync.highestBlock-sync.currentBlock)+" blocks)"
-  }
-  if (error) {
-    document.getElementById("status").innerHTML="Error"
-    console.log(error)
+function updateInterface(error,asdf) {
+  //Check error
+  if (error!==null) {
+    document.getElementById("status").innerHTML="<span style=\"color: #FF0000\">Status: Error</span>"
+    log(false,"Error",JSON.stringify(Error))
   }
   
   //Present account information
@@ -56,8 +52,8 @@ function updateInterface(error, sync) {
 
 window.onload = function () {
   if (init()!==false) {
-    updateInterface(null, false)
-    web3.eth.isSyncing(updateInterface)
+    updateInterface(null)
+    web3.eth.filter('latest').watch(updateInterface)
   }
 }
 

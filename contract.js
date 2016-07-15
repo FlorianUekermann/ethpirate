@@ -1,15 +1,118 @@
 contractSource=`contract Game {
-    address owner;
-
-    function Game() {
-      owner = msg.sender;
-    }
-    
-    function Cleanup() {
-      if (msg.sender==owner) {
-	selfdestruct(owner);
+  address[5] Pirates;
+  int8[5] Votes;
+  uint8 Round;
+  uint8[5] Proposal;
+  
+  // Add senders address to list of pirates.
+  function Join() {
+    // Check all positions
+    for (uint8 i=0; i<Pirates.length; i++) {
+      // Check if this position is available.
+      if (Pirates[i]==0) {
+	// Let the sender join
+	Pirates[i]=msg.sender;
+	EventJoined(msg.sender);
+	return;
       }
+      // Check if the sender already has this position.
+      if (Pirates[i]==msg.sender) { return; }
     }
+  }
+  event EventJoined(address Pirate);
+  
+  // Process a split proposal. The elements of the split
+  // argument represent the amount of treasure the captain
+  // wants to share with the other pirates in order of rank.
+  function ProposeSplit(uint8[] split) {
+    // Check if there is a proposal already
+    for (uint8 i=0; i<Proposal.length; i++) {
+      if (Proposal[i]!=0) { return; }
+    }
+    // Check if the sender is currently captain.
+    if (msg.sender!=Pirates[Round]) { return; }
+    // Check if the number of elements in the split matches
+    // the number of other pirates that are still alive.
+    if (split.length!=Pirates.length-Round-1) { return; }
+    // Check if the proposal distributes too much treasure.
+    uint16 sum;
+    for (i=0; i<split.length; i++) {
+      sum += split[i];
+    }
+    if (sum > 100) { return; }
+    // The proposal is valid.
+    Proposal[Round]=uint8(100-sum);
+    for (i=0; i<split.length; i++) {
+      Proposal[Round+1+i]=split[i];
+    }
+    Votes[Round]=1;
+    EventProposed(split);
+    //Check if the decision is settled without a vote
+    Decide();
+  }
+  event EventProposed(uint8[] Proposal);
+  
+  // Process a vote. True means voting for acceptance.
+  function Vote(bool vote) {
+      // Check if there is a vote in progress
+      if (Votes[Round]==0) { return; }
+      // Check if the sender is a pirate who can vote
+      uint8 senderId = 0;
+      for (uint8 i=Round+1; i<Pirates.length; i++) {
+        if (Pirates[i]==msg.sender) { senderId=i; break; }
+      }
+      if (senderId==0) { return; }
+      // Check if the pirate has voted already
+      if (Votes[senderId]!=0) { return; }
+      // The vote is valid.
+      if (vote==true) {
+        Votes[senderId]=1;
+      } else {
+        Votes[senderId]=-1;
+      }
+      //Check if this vote settles the decision
+      Decide();
+  }
+
+  // Check if the proposal was accepted or declined
+  function Decide() {
+      // Sum the casted votes and count how many are missing
+      int8 sum = 0;
+      int8 missing = 0;
+      for (uint8 i=0; i<Pirates.length; i++) {
+          sum += Votes[i];
+          if (Votes[i]==0) { missing++; }
+      }
+      // Check if the casted votes allow a decision.
+      if (sum-missing >= 0) {
+        // The proposal was accepted. End the game.
+        EventDecision(true);
+        for (i=0; i<Pirates.length; i++) {
+            Votes[i]=0;
+        }
+      } else if (sum+missing < 0) {
+        // The proposal was declined. Start next round.
+        EventDecision(false);
+        Round++;
+        for (i=0; i<Pirates.length; i++) {
+            Proposal[i]=0;
+            Votes[i]=0;
+        }
+      }
+  }
+  event EventDecision(bool Accepted);
+  
+  address owner;
+
+  function Game() {
+    owner = msg.sender;
+  }
+    
+  function Cleanup() {
+    if (msg.sender==owner) {
+      selfdestruct(owner);
+    }
+  }
 }
 `
 
@@ -29,8 +132,7 @@ function uploadContract() {
   }
   log(true,"Created contract","Transaction hash: "+thash+"\nChecking for confirmations...")
   //Check the contract address until it has been confirmed 10 times
-  syncing = web3.eth.isSyncing(function() {
-    console.log("asdf")
+  filter = web3.eth.filter('latest').watch(function() {
     receipt = web3.eth.getTransactionReceipt(thash)
     if (receipt!==null) {
 	conf=web3.eth.blockNumber-receipt.blockNumber
@@ -40,12 +142,11 @@ function uploadContract() {
 	  msg=msg+"\nKeep checking for confirmations..."
 	} else {
 	  msg=msg+"\nDone. Write down the last contract address!"
-	  syncing.stopWatching()
+	  filter.stopWatching()
 	}
 	log(true,"Contract mined",msg)
     } else {
       log(false,"Contract not yet mined","Keep checking for confirmations...")
     }
   })
-  console.log(syncing)
 }
