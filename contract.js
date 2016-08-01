@@ -25,7 +25,7 @@ contractSource=`contract Game {
   // argument represent the amount of treasure the captain
   // wants to share with the other pirates in order of rank.
   function ProposeSplit(uint8[] split) {
-    // Check if there is a proposal already
+    // Check if there is already a proposal
     for (uint8 i=0; i<Proposal.length; i++) {
       if (Proposal[i]!=0) { return; }
     }
@@ -53,22 +53,24 @@ contractSource=`contract Game {
   event EventProposed(uint8[] Proposal);
   
   // Process a vote. True means voting for acceptance.
-  function Vote(bool vote) {
+  function Vote(uint8 round, bool vote) {
+      // Check if the round matches
+      if (Round!=round) { return; }
       // Check if there is a vote in progress
       if (Votes[Round]==0) { return; }
       // Check if the sender is a pirate who can vote
-      uint8 senderId = 0;
+      uint8 senderIdx = 0;
       for (uint8 i=Round+1; i<Pirates.length; i++) {
-        if (Pirates[i]==msg.sender) { senderId=i; break; }
+        if (Pirates[i]==msg.sender) { senderIdx=i; break; }
       }
-      if (senderId==0) { return; }
+      if (senderIdx==0) { return; }
       // Check if the pirate has voted already
-      if (Votes[senderId]!=0) { return; }
+      if (Votes[senderIdx]!=0) { return; }
       // The vote is valid.
       if (vote==true) {
-        Votes[senderId]=1;
+        Votes[senderIdx]=1;
       } else {
-        Votes[senderId]=-1;
+        Votes[senderIdx]=-1;
       }
       //Check if this vote settles the decision
       Decide();

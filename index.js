@@ -1,10 +1,10 @@
 // Insert contract address logged by uploadContract()
-var contractAddress = '0x48a4c09be9764220d86c601e9bd9dc423ecd2674'
+var contractAddress = '0xde199369fbcc61eceddc4459a9c08151e1ec74d1'
 // Compiled contract
 var contractCompiled
 // Contract on blockchain
 var contractInstance
-
+var contractEvents
 
 function init() {
   if (web3.eth.accounts.length===0) {
@@ -31,16 +31,45 @@ function init() {
   log(true, "Compiled contract")
   
   contractInterface = web3.eth.contract(JSON.parse(contractCompiled.Game.interface))
-  contractInstance = instance=contractInterface.at(contractAddress)
+  contractInstance = contractInterface.at(contractAddress)
   
-  
+  // Listen for events
+  contractEvents = contractInstance.allEvents({fromBlock: 1400000, toBlock: 'latest'},function(error,event){
+    if (error!==null) {
+      log(false, "Event listener error", JSON.stringify(error))
+      return
+    }
+    log(true, "Event", JSON.stringify(event))
+    updateEvent()
+  })
 }
 
-function updateInterface(error,asdf) {
+function updateEvent() {
+  addresses=[]
+  round = 0
+  
+  
+  events = contractEvents.get()
+  for (let event of events) {
+    switch (event.event) {
+      case "EventJoined":
+	address = event.args.Pirate
+	addresses.push(address)
+	text = address.slice(0,10)
+	if (address==web3.eth.defaultAccount) {
+	  text = "You"
+	}
+	document.getElementById("addr"+addresses.length).innerHTML = text
+	break
+    }
+  }
+}
+
+function updateNewBlock(error) {
   //Check error
   if (error!==null) {
     document.getElementById("status").innerHTML="<span style=\"color: #FF0000\">Status: Error</span>"
-    log(false,"Error",JSON.stringify(Error))
+    log(false,"Error",JSON.stringify(error))
   }
   
   //Present account information
@@ -52,8 +81,8 @@ function updateInterface(error,asdf) {
 
 window.onload = function () {
   if (init()!==false) {
-    updateInterface(null)
-    web3.eth.filter('latest').watch(updateInterface)
+    updateNewBlock(null)
+    web3.eth.filter('latest').watch(updateNewBlock)
   }
 }
 
