@@ -14,8 +14,10 @@
     .pirateList {width: 100%; margin: 10; padding: 10; overflow: hidden;}
     .coin {width: 25px}
     .head {width: 100%}
+    .dialog {width: 80%; border: 1px solid #ccc; border-radius: 10px; padding: 10px; margin: 10px;}
     table {border-collapse: collapse;}
     tr {border-bottom: 1px solid #ccc;}
+    td {text-align: center}
     input, img {vertical-align: middle}
   </style>
 </head>
@@ -44,30 +46,47 @@
     <th>Pirate 3</th> 
   </tr>
   <tr>
-    <th>Address:</th>
-    <th id="addr1">Waiting</th>
-    <th id="addr2">Waiting</th>
-    <th id="addr3">Waiting</th>
-    <th id="addr4">Waiting</th>
-    <th id="addr5">Waiting</th>
+    <th></th>
+    <td id="addr1">free</td>
+    <td id="addr2">free</td>
+    <td id="addr3">free</td>
+    <td id="addr4">free</td>
+    <td id="addr5">free</td>
   </tr>
   <tr>
     <th>Split:</th>
-    <th><img src="coins.svg" class="coin"><input type="number" min="0" max="100" readonly/></th>
-    <th><img src="coins.svg" class="coin"><input type="number" min="0" max="100" readonly/></th>
-    <th><img src="coins.svg" class="coin"><input type="number" min="0" max="100" readonly/></th>
-    <th><img src="coins.svg" class="coin"><input type="number" min="0" max="100" readonly/></th>
-    <th><img src="coins.svg" class="coin"><input type="number" min="0" max="100" readonly/></th>
+    <th><img src="coins.svg" class="coin"><input id="coins1" type="number" min="0" max="100" readonly/></th>
+    <th><img src="coins.svg" class="coin"><input id="coins2" type="number" min="0" max="100" readonly/></th>
+    <th><img src="coins.svg" class="coin"><input id="coins3" type="number" min="0" max="100" readonly/></th>
+    <th><img src="coins.svg" class="coin"><input id="coins4" type="number" min="0" max="100" readonly/></th>
+    <th><img src="coins.svg" class="coin"><input id="coins5" type="number" min="0" max="100" readonly/></th>
   </tr>
   <tr>
     <th>Votes:</th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
+    <th id="vote1"></th>
+    <th id="vote2"></th>
+    <th id="vote3"></th>
+    <th id="vote4"></th>
+    <th id="vote5"></th>
   </tr>
 </table>
+<div id="dialogJoin" class="dialog" style="display:none">
+  There are empty slots. Click the &quot;Join game&quot; button to participate<br/>
+  <input type="button" onclick="sendJoin()" value="Join game"/>
+</div>
+<div id="dialogPropose" class="dialog" style="display:none">
+  You are the captain. You can propose a how the treasure is split between the crew members.
+  There are 100 coins in total. Chose a split by editing the values in the table above.
+  Once you are satisfied with your proposal click on the &quot;Propose split&quot; button.<br/>
+  <input type="button" onclick="sendProposal()" value="Propose split"/>
+</div>
+<div id="dialogWait" class="dialog" style="display:none">
+  Waiting for the captain to propose a split. Please wait for a proposal before voting.
+</div>
+<div id="dialogVote" class="dialog" style="display:none">
+  Decide wether to accept or reject the proposal:<br/>
+  <input type="button" onclick="sendVote(true)" value="Accept proposal"/><input type="button" onclick="sendVote(false)" value="Reject proposal"/>
+</div>
 <dl id="log"></dl>
 </body>
 </html>

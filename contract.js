@@ -72,10 +72,12 @@ contractSource=`contract Game {
       } else {
         Votes[senderIdx]=-1;
       }
+      EventVote(senderIdx, vote);
       //Check if this vote settles the decision
       Decide();
   }
-
+  event EventVote(uint8 Voter, bool Vote);
+  
   // Check if the proposal was accepted or declined
   function Decide() {
       // Sum the casted votes and count how many are missing
@@ -104,11 +106,34 @@ contractSource=`contract Game {
   }
   event EventDecision(bool Accepted);
   
+  function Payout() {
+    // Check which pirate the sender is
+    uint8 senderIdx = 0;
+    bool found = false;
+    for (uint8 i=0; i<Pirates.length; i++) {
+      if (Pirates[i]==msg.sender) {
+	senderIdx=i;
+	found=true;
+	break;
+      }
+    }
+    // Send money if sender was found
+    if (!found) { return; }
+    uint share = (price/100)*Proposal[senderIdx];
+    Proposal[senderIdx] = 0;
+    if (!msg.sender.send(share)) {
+      throw;
+    }
+  }
+  
   address owner;
-
+  uint price;
   function Game() {
     owner = msg.sender;
+    price = msg.value;
+    EventStarted();
   }
+  event EventStarted();
     
   function Cleanup() {
     if (msg.sender==owner) {
@@ -118,7 +143,11 @@ contractSource=`contract Game {
 }
 `
 
-function uploadContract() {
+function uploadContract(value) {
+  if (value===undefined) {
+    log(false,"No value as price money provided. Can't upload.")
+    return
+  }
   //Check if the contract compiled succesfully
   if (contractCompiled===undefined) {
     log(false,"No compiled contract. Can't upload.")
@@ -126,10 +155,10 @@ function uploadContract() {
   }
   //Send the creation transaction
   try {
-    thash = web3.eth.sendTransaction({data: contractCompiled.Game.bytecode})
+    thash = web3.eth.sendTransaction({data: contractCompiled.Game.bytecode, value: web3.toWei(value)})
   }
   catch (e) {
-    log(false,"Sending contract failed",json.Stringify(e))
+    log(false,"Sending contract failed",JSON.stringify(e))
     return
   }
   log(true,"Created contract","Transaction hash: "+thash+"\nChecking for confirmations...")
