@@ -1,24 +1,25 @@
 contractSource=`contract Game {
   address[5] Pirates;
   int8[5] Votes;
-  uint8 Round;
+  uint Round;
   uint8[5] Proposal;
   bool[5] Payed;
   
   // Add senders address to list of pirates.
   function Join() {
-    // Check all positions
-    for (uint8 i=0; i<Pirates.length; i++) {
-      // Check if this position is available.
-      if (Pirates[i]==0) {
-	// Let the sender join
-	Pirates[i]=msg.sender;
-	EventJoined(msg.sender);
-	return;
-      }
-      // Check if the sender already has this position.
-      if (Pirates[i]==msg.sender) { return; }
+    // Check that game hasn't ended
+    if (GameEnded()) { return; }
+    // Check if sender is already a pirate
+    if (PlayerIdx() != -1) { return; }
+    // Find first free slot
+    int free = -1;
+    for (uint i=0; i<Pirates.length; i++) {
+      if (Pirates[i]==0) { free = int(i); }
     }
+    // Join player if a free slot was found
+    if (free == -1)  { return; }
+	Pirates[uint(free)]=msg.sender;
+	EventJoined(msg.sender);
   }
   event EventJoined(address Pirate);
   
@@ -26,26 +27,26 @@ contractSource=`contract Game {
   // argument represent the amount of treasure the captain
   // wants to share with the other pirates in order of rank.
   function ProposeSplit(uint8[] split) {
-    // Check if there is already a proposal
-    for (uint8 i=0; i<Proposal.length; i++) {
-      if (Proposal[i]!=0) { return; }
-    }
+    // Check if game is in proposal phase
+    if (!ProposalPhase()) { return; }
     // Check if the sender is currently captain.
-    if (msg.sender!=Pirates[Round]) { return; }
+    if (Rank() != RankCaptain) { return; }
     // Check if the number of elements in the split matches
     // the number of other pirates that are still alive.
     if (split.length!=Pirates.length-Round-1) { return; }
     // Check if the proposal distributes too much treasure.
     uint16 sum;
-    for (i=0; i<split.length; i++) {
+    for (uint8 i=0; i<split.length; i++) {
       sum += split[i];
     }
     if (sum > 100) { return; }
-    // The proposal is valid.
+    // Calculate and store the captains share
     Proposal[Round]=uint8(100-sum);
+    // Store other pirates share
     for (i=0; i<split.length; i++) {
       Proposal[Round+1+i]=split[i];
     }
+    // Set captains vote
     Votes[Round]=1;
     EventProposed(split);
     //Check if the decision is settled without a vote
@@ -54,20 +55,19 @@ contractSource=`contract Game {
   event EventProposed(uint8[] Proposal);
   
   // Process a vote. True means voting for acceptance.
+  // The round is specified to ensure that the vote is not
+  // a transaction from last round that arrived too late.
   function Vote(uint8 round, bool vote) {
       // Check if the round matches
       if (Round!=round) { return; }
       // Check if there is a vote in progress
-      if (Votes[Round]==0) { return; }
+      if (!VotingPhase()) { return; }
       // Check if the sender is a pirate who can vote
-      uint8 senderIdx = 0;
-      for (uint8 i=Round+1; i<Pirates.length; i++) {
-        if (Pirates[i]==msg.sender) { senderIdx=i; break; }
-      }
-      if (senderIdx==0) { return; }
+      if (Rank() != RankPirate) { return; }
       // Check if the pirate has voted already
+      uint senderIdx = uint(PlayerIdx());
       if (Votes[senderIdx]!=0) { return; }
-      // The vote is valid.
+      // Store the vote
       if (vote==true) {
         Votes[senderIdx]=1;
       } else {
@@ -77,28 +77,34 @@ contractSource=`contract Game {
       //Check if this vote settles the decision
       Decide();
   }
-  event EventVote(uint8 Voter, bool Vote);
+  event EventVote(uint Voter, bool Vote);
   
   // Check if the proposal was accepted or declined
   function Decide() {
       // Sum the votes and count how many are missing
-      int8 sum = 0;
-      int8 missing = 0;
-      for (uint8 i=0; i<Pirates.length; i++) {
+      int sum = 0;
+      int missing = 0;
+      for (uint i=0; i<Pirates.length; i++) {
           sum += Votes[i];
           if (Votes[i]==0) { missing++; }
       }
       // Check if the casted votes allow a decision.
       if (sum-missing >= 0) {
-        // The proposal was accepted. End game.
+        // The proposal was accepted.
         EventDecision(true);
+        // End voting phase by zeroing votes.
+        // End game by leaving proposal unchanged
+        // (Zeroing would start proposal phase).
         for (i=0; i<Pirates.length; i++) {
            Votes[i]=0;
         }
       } else if (sum+missing < 0) {
-        // The proposal was declined. Start next round.
+        // The proposal was declined.
         EventDecision(false);
+        // Increment round counter
         Round++;
+        // Start proposal phase by zeroing proposal.
+        // End voting phase by zeroing votes
         for (i=0; i<Pirates.length; i++) {
             Proposal[i]=0;
             Votes[i]=0;
@@ -107,28 +113,62 @@ contractSource=`contract Game {
   }
   event EventDecision(bool Accepted);
   
-  function Payout() {
-    // Check if the game is done (Non-zero proposal and all votes empty)
-    uint16 sum;
-    for (i=0; i<Pirates.length; i++) {
-      sum += uint16(Proposal[i]);
-      if (Votes[i]!=0) { return; }
+  // Check if game has ended. The game has ended if it is
+  // neither in voting or proposal phase.
+  function GameEnded() private returns (bool) {
+      return !ProposalPhase() && !VotingPhase();
+  }
+  
+  // Check if the game is waiting for proposal.
+  // This is true if all elements of "Proposal" are zero.
+  function ProposalPhase() private returns (bool) {
+    for (uint8 i=0; i<Proposal.length; i++) {
+      if (Proposal[i]!=0) { return false; }
     }
-    if (sum == 0) { return; }
-    // Check which pirate the sender is
-    uint8 senderIdx = 0;
-    bool found = false;
-    for (uint8 i=0; i<Pirates.length; i++) {
-      if (Pirates[i]==msg.sender) {
-	senderIdx=i;
-	found=true;
-	break;
+    return true;
+  }
+  
+  // Check if game is waiting for votes.
+  // This is true if at least one element of Votes is non-zero.
+  function VotingPhase() private returns (bool) {
+    for (uint8 i=0; i<Votes.length; i++) {
+      if (Votes[i]!=0) { return true; }
+    }
+    return false;
+  }
+  
+  // Returns the player index of the sender.
+  // Returns -1 if the sender has not joined the game.
+  function PlayerIdx() private returns (int) {
+      for (uint i=0; i<Pirates.length; i++) {
+        if (Pirates[i]==msg.sender) { return int(i); }
       }
-    }
-    // Send money if sender was found
-    if (!found) { return; }
-    uint share = (price/100)*Proposal[senderIdx];
-    Proposal[senderIdx] = 0;
+      return -1;
+  }
+  
+  // Returns rank of the pirate. Returns -1 if the player is
+  // not a pirate. The ranks are specified by the constant below.
+  int constant RankDead = 0;
+  int constant RankCaptain = 1;
+  int constant RankPirate = 2;
+  function Rank() private returns (int) {
+      int senderIdx = PlayerIdx();
+      if (senderIdx == int(Round)) { return RankCaptain; }
+      if (senderIdx <= int(Round)) { return RankDead; }
+      if (senderIdx < int(Pirates.length)) { return RankPirate; }
+      return -1;
+  }
+  
+  function Payout() {
+    // Check if the game ended
+    if (!GameEnded()) { return; }
+    // Check if sender is a player and hasn't collected his share.
+    int senderIdx = PlayerIdx();
+    if (senderIdx == -1) { return; }
+    // Calculate share
+    uint share = (price/100)*Proposal[uint(senderIdx)];
+    // Zero address to prevent repeated collection
+    Pirates[uint(senderIdx)] = 0;
     if (!msg.sender.send(share)) {
       throw;
     }
