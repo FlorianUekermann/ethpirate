@@ -1,5 +1,5 @@
 // Insert contract address logged by uploadContract()
-var contractAddress = '0x63be1674802be0a7cabe70bf43a93b8f42a031b8'
+var contractAddress = '0x0db334bbf0227ee2ed606c903bb7af02e7f82509'
 // Compiled contract
 var contractCompiled
 // Contract on blockchain
@@ -49,52 +49,44 @@ function init() {
 
 function updateEvent(events) {
   // Reset visibility (Hide all dialogs).
-  for (let dialogName of ["Join","Propose","Wait","Vote"]) {
+  for (let dialogName of ["Join","Propose","Wait","Vote", "Dead"]) {
     document.getElementById("dialog"+dialogName).style.setProperty("display","none")
   }
   // Reset split proposal field properties
-  for (i=1;i<=NumPirates;i++){
+  for (i=0;i<NumPirates;i++){
     el = document.getElementById("coins"+i)
-    el.readonly=true
+    el.readonly = true
     el.style.setProperty("border","2px solid #AAA")
     el.oninput = null
   }
-  // Reset vote display
-  for (i=1;i<=NumPirates;i++){
-    el = document.getElementById("vote"+i).innerHTML=""
-  }
-  
-  // Initialize state before evaluating all events
-  addresses=[]
-  round = 1
-  id = 0
-  split = []
-  done = false
-  votes = new Array(5).fill(null)
   
   // Evaluate all events
+  round = 0
+  id = -1
+  joined = 0
+  finished = false
   for (let event of events) {
     switch (event.event) {
       case "EventJoined":
-	address = event.args.Pirate
-	addresses.push(address)
-	text = address.slice(0,10)
-	if (address==web3.eth.defaultAccount) {
+	text = event.args.Pirate.slice(0,10)
+	if (event.args.Pirate==web3.eth.defaultAccount) {
 	  text = "<span style=\"color: #F70; font-weight: bold;\" >You</span>"
 	  id = addresses.length
 	}
-	document.getElementById("addr"+addresses.length).innerHTML = text
+	document.getElementById("addr"+joined).innerHTML = text
+	joined++
 	break
       case "EventProposed":
 	split = event.args.Proposal
-	votes[round-1]=true  
+	votes = []
+	votes[round]=true  
 	break
       case "EventDecision":
 	if (event.args.Accepted) {
-	  done = true
+	  finished = true
 	} else {
-	  split = [];
-	  votes = new Array(5).fill(null)
+	  delete split
+	  delete votes
 	  round++
 	}
 	break
@@ -103,29 +95,51 @@ function updateEvent(events) {
 	break 
     }
   }
-  // Set pictures based on round
-  for (i=1;i<=NumPirates;i++){
+  // Set pictures and rank text based on round
+  for (i=0;i<NumPirates;i++){
     if (i===round) {
       fn = "pirate-captain.svg"
+      text = "Captain"
     } else if (i===round+1) {
       fn = "pirate-mate.svg"
+      text = "First mate"
     } else if (i<round) {
       fn = "pirate-dead.svg"
+      text = "Dead"
     } else {
       fn = "pirate.svg"
+      text = "Pirate "+i-round
     }
     document.getElementById("img"+i).setAttribute("src",fn)
+    document.getElementById("rank"+i).innerHTML = text
   }
   // If there are empty spots and the user has not joined yet, display the joining dialog
-  if (addresses.length<NumPirates  && id == 0) {
+  if (joined<NumPirates  && id == 0) {
     document.getElementById("dialogJoin").style.removeProperty("display")
   }
   // If user is a dead pirate display message
-  if ( id < round) {
+  if ( 0 < id && id < round) {
     document.getElementById("dialogDead").style.removeProperty("display")
   }
-  // Display votes
-  for (i=1;i<=NumPirates;i++){
+  // Display split if it is defined
+  if (typeof split !== 'undefined') {
+    // There is a split proposal. Fill in the values.
+    sum = 0
+    for (i=0;i<NumPirates;i++){
+      value = ""
+      if (i > round) {
+	value = split[i-round-1].toNumber()
+	sum += value
+      }
+      document.getElementById("coins"+i).value=value
+    }
+    document.getElementById("coins"+round).value=100-sum
+  }
+  
+  // Check if in voting phase
+  if (typeof votes !== 'undefined') {
+    // Voting phase, display votes
+  for (i=0;i<NumPirates;i++){
     text=""
     if (votes[i-1]===true) {
       text="<span style=\"color: #00AA00\">&#x2714;</span>"
@@ -134,25 +148,20 @@ function updateEvent(events) {
     }
     document.getElementById("vote"+i).innerHTML=text
   }
-  // Check if there is a split proposal
-  if (split.length>0) {
-    // There is a split proposal. Fill in the values.
-    sum = 0
-    for (i=1;i<=NumPirates;i++){
-      value = ""
-      if (round < i) {
-	value = split[i-round-1].toNumber()
-	sum += value
-      }
-      document.getElementById("coins"+i).value=value
-    }
-    document.getElementById("coins"+round).value=100-sum
-    // Show voting dialog if the user is pirate who is alive and has not voted yet
-    if (id > round && votes[id-1]===null) {
+  // Show voting dialog if the user can vote and game did not finish yet
+    if (id > round && votes[id-1]===undefined && !finished) {
       document.getElementById("dialogVote").style.removeProperty("display")
     }
   } else {
-    //There is no split proposal
+    // Not in voting phase, erase votes
+    for (i=0;i<NumPirates;i++){
+      el = document.getElementById("vote"+i).innerHTML=""
+    }
+  }
+  
+  // Check if in proposal phase
+  if (typeof split !== 'undefined') {
+    //Proposal phase (there is no split proposal yet)
     // Check if the user is the captain.
     if (id == round) {
       // User is captain. Display proposal dialog and unlock split editing
@@ -181,10 +190,10 @@ function updateEvent(events) {
 	  document.getElementById("coins"+id).value = 100 - sum
 	}
       }
-    } else if (id != 0) {
+    } else {
       // User joined but is not the captain. Display waiting dialog and display empty split.
       document.getElementById("dialogWait").style.removeProperty("display")
-      for (i=1;i<=NumPirates;i++){
+      for (i=0;i<NumPirates;i++){
 	document.getElementById("coins"+i).value=""
       }
     }
