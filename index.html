@@ -31,11 +31,11 @@
 <table class="pirateList">
   <tr>
     <th></th>
-    <th><img src="pirate-captain.svg" class="head"></th>
-    <th><img src="pirate-mate.svg" class="head"></th>
-    <th><img src="pirate.svg" class="head"></th>
-    <th><img src="pirate.svg" class="head"></th>
-    <th><img src="pirate.svg" class="head"></th> 
+    <th><img id="img1" src="pirate-dead.svg" class="head"></th>
+    <th><img id="img2" src="pirate-dead.svg" class="head"></th>
+    <th><img id="img3" src="pirate-dead.svg" class="head"></th>
+    <th><img id="img4" src="pirate-dead.svg" class="head"></th>
+    <th><img id="img5" src="pirate-dead.svg" class="head"></th> 
   </tr>
   <tr>
     <th>Rank:</th>
@@ -70,6 +70,9 @@
     <th id="vote5"></th>
   </tr>
 </table>
+<div id="dialogDead" class="dialog" style="display:none">
+  Your split proposal was rejected. You are dead. Feel free to watch the rest of the game or leave.
+</div>
 <div id="dialogJoin" class="dialog" style="display:none">
   There are empty slots. Click the &quot;Join game&quot; button to participate<br/>
   <input type="button" onclick="sendJoin()" value="Join game"/>
@@ -85,8 +88,8 @@
 </div>
 <div id="dialogVote" class="dialog" style="display:none">
   Decide wether to accept or reject the proposal:<br/>
-  <input type="button" onclick="sendVote(true)" value="Accept proposal"/><input type="button" onclick="sendVote(false)" value="Reject proposal"/>
+  <input type="button" onclick="sendVote(1)" value="Accept proposal"/><input type="button" onclick="sendVote(0)" value="Reject proposal"/>
 </div>
-<dl id="log"></dl>
+<dl id="log" style="display:none"></dl>
 </body>
 </html>

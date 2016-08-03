@@ -87,7 +87,6 @@ function updateEvent(events) {
 	break
       case "EventProposed":
 	split = event.args.Proposal
-	votes = new Array(5).fill(null)
 	votes[round-1]=true  
 	break
       case "EventDecision":
@@ -95,18 +94,35 @@ function updateEvent(events) {
 	  done = true
 	} else {
 	  split = [];
+	  votes = new Array(5).fill(null)
 	  round++
 	}
 	break
       case "EventVote":
-	  votes[Voter-1]=event.args.Vote
+	  votes[event.args.Voter]=event.args.Vote
 	break 
     }
   }
-  console.log(votes)
+  // Set pictures based on round
+  for (i=1;i<=NumPirates;i++){
+    if (i===round) {
+      fn = "pirate-captain.svg"
+    } else if (i===round+1) {
+      fn = "pirate-mate.svg"
+    } else if (i<round) {
+      fn = "pirate-dead.svg"
+    } else {
+      fn = "pirate.svg"
+    }
+    document.getElementById("img"+i).setAttribute("src",fn)
+  }
   // If there are empty spots and the user has not joined yet, display the joining dialog
   if (addresses.length<NumPirates  && id == 0) {
     document.getElementById("dialogJoin").style.removeProperty("display")
+  }
+  // If user is a dead pirate display message
+  if ( id < round) {
+    document.getElementById("dialogDead").style.removeProperty("display")
   }
   // Display votes
   for (i=1;i<=NumPirates;i++){
@@ -131,7 +147,10 @@ function updateEvent(events) {
       document.getElementById("coins"+i).value=value
     }
     document.getElementById("coins"+round).value=100-sum
-    // 
+    // Show voting dialog if the user is pirate who is alive and has not voted yet
+    if (id > round && votes[id-1]===null) {
+      document.getElementById("dialogVote").style.removeProperty("display")
+    }
   } else {
     //There is no split proposal
     // Check if the user is the captain.
@@ -159,7 +178,6 @@ function updateEvent(events) {
 	  for (i=id+1;i<=NumPirates;i++){
 	    sum += document.getElementById("coins"+i).valueAsNumber
 	  }
-	  console.log(sum)
 	  document.getElementById("coins"+id).value = 100 - sum
 	}
       }
@@ -173,9 +191,21 @@ function updateEvent(events) {
   }
 }
 
+function sendVote(vote) {
+  try {
+    contractInstance.Vote(vote)
+  }
+  catch(e) {
+    log(false,"Error sending Vote("+vote+")",e.message)
+    return
+  }
+  log(true,"Sent Vote("+vote+")")
+}
+
 function sendJoin() {
   try {
     contractInstance.Join()
+    return
   }
   catch(e) {
     log(false,"Error sending Join()",e.message)
@@ -207,6 +237,7 @@ function sendProposal() {
   }
   catch(e) {
     log(false,"Error sending ProposeSplit(["+split+"])",e.message)
+    return
   }
   log(true,"Sent ProposeSplit(["+split+"])")
 }

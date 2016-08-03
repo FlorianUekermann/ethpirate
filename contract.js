@@ -3,6 +3,7 @@ contractSource=`contract Game {
   int8[5] Votes;
   uint8 Round;
   uint8[5] Proposal;
+  bool[5] Payed;
   
   // Add senders address to list of pirates.
   function Join() {
@@ -80,7 +81,7 @@ contractSource=`contract Game {
   
   // Check if the proposal was accepted or declined
   function Decide() {
-      // Sum the casted votes and count how many are missing
+      // Sum the votes and count how many are missing
       int8 sum = 0;
       int8 missing = 0;
       for (uint8 i=0; i<Pirates.length; i++) {
@@ -89,10 +90,10 @@ contractSource=`contract Game {
       }
       // Check if the casted votes allow a decision.
       if (sum-missing >= 0) {
-        // The proposal was accepted. End the game.
+        // The proposal was accepted. End game.
         EventDecision(true);
         for (i=0; i<Pirates.length; i++) {
-            Votes[i]=0;
+           Votes[i]=0;
         }
       } else if (sum+missing < 0) {
         // The proposal was declined. Start next round.
@@ -107,6 +108,13 @@ contractSource=`contract Game {
   event EventDecision(bool Accepted);
   
   function Payout() {
+    // Check if the game is done (Non-zero proposal and all votes empty)
+    uint16 sum;
+    for (i=0; i<Pirates.length; i++) {
+      sum += uint16(Proposal[i]);
+      if (Votes[i]!=0) { return; }
+    }
+    if (sum == 0) { return; }
     // Check which pirate the sender is
     uint8 senderIdx = 0;
     bool found = false;
