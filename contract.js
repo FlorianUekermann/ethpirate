@@ -14,7 +14,7 @@ contractSource=`contract Game {
     // Find first free slot
     int free = -1;
     for (uint i=0; i<Pirates.length; i++) {
-      if (Pirates[i]==0) { free = int(i); }
+      if (Pirates[i]==0) { free = int(i); break; }
     }
     // Join player if a free slot was found
     if (free == -1)  { return; }
@@ -84,7 +84,7 @@ contractSource=`contract Game {
       // Sum the votes and count how many are missing
       int sum = 0;
       int missing = 0;
-      for (uint i=0; i<Pirates.length; i++) {
+      for (uint i=Round; i<Pirates.length; i++) {
           sum += Votes[i];
           if (Votes[i]==0) { missing++; }
       }
@@ -151,11 +151,11 @@ contractSource=`contract Game {
   int constant RankDead = 0;
   int constant RankCaptain = 1;
   int constant RankPirate = 2;
-  function Rank() private returns (int) {
+  function Rank() returns (int) {
       int senderIdx = PlayerIdx();
       if (senderIdx == int(Round)) { return RankCaptain; }
-      if (senderIdx <= int(Round)) { return RankDead; }
-      if (senderIdx < int(Pirates.length)) { return RankPirate; }
+      if (senderIdx >=0 && senderIdx < int(Round)) { return RankDead; }
+      if (senderIdx >=0 && senderIdx < int(Pirates.length)) { return RankPirate; }
       return -1;
   }
   
@@ -179,9 +179,9 @@ contractSource=`contract Game {
   function Game() {
     owner = msg.sender;
     price = msg.value;
-    EventStarted();
+    EventStarted(price);
   }
-  event EventStarted();
+  event EventStarted(uint Price);
     
   function Cleanup() {
     if (msg.sender==owner) {

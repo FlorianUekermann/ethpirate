@@ -77,15 +77,27 @@
   Once you are satisfied with your proposal click on the &quot;Propose split&quot; button.<br/>
   <input type="button" onclick="sendProposal()" value="Propose split"/>
 </div>
+<div id="dialogPropose" class="dialog" style="display:none">
+  You are the captain. You can propose a how the treasure is split between the crew members.
+  There are 100 coins in total. Chose a split by editing the values in the table above.
+  Once you are satisfied with your proposal click on the &quot;Propose split&quot; button.<br/>
+  <input type="button" onclick="sendProposal()" value="Propose split"/>
+</div>
 <div id="dialogWait" class="dialog" style="display:none">
   Waiting for the captain to propose a split. Please wait for a proposal before voting.
 </div>
 <div id="dialogVote" class="dialog" style="display:none">
   Decide wether to accept or reject the proposal:<br/>
-  <input type="button" onclick="sendVote(1)" value="Accept proposal"/><input type="button" onclick="sendVote(0)" value="Reject proposal"/>
+  <input id="acceptButton" type="button" value="Accept proposal"/><input id="rejectButton" type="button" value="Reject proposal"/>
 </div>
+<div id="dialogPayout" class="dialog" style="display:none">
+  The captains split proposal was accepted. Click on the &quot;Get reward&quot; button below to retrieve your share.<br/>
+  <input id="buttonPayout" type="button" value="Get reward" onclick="sendPayout()"/>
+</div>
+<h3>History (most recent event first):</h3>
+<ul id="history"></ul>
 <details>
-  <summary>Show log</summary>
+  <summary>Show developer log</summary>
   <dl id="log"></dl>
 </details>
 </body>
