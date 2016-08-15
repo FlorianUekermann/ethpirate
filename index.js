@@ -7,46 +7,6 @@ var contractInstance
 var contractEvents
 const NumPirates = 5
 
-function init() {
-  if (web3.eth.accounts.length===0) {
-    document.getElementById("account").innerHTML="No account selected."
-    document.getElementById("status").innerHTML="<span style=\"color: #FF0000\">Status: Error</span>"
-    return false
-  } else if (web3.eth.accounts.length===1) {
-    web3.eth.defaultAccount=web3.eth.accounts[0]
-  } else {
-    document.getElementById("account").innerHTML="Multiple accounts selected."
-    document.getElementById("status").innerHTML="<span style=\"color: #FF0000\">Status: Error</span>"
-    return false
-  }
-  
-  // Compile contract and show errors
-  try {
-    contractCompiled = web3.eth.compile.solidity(contractSource)
-  }
-  catch(e) {
-    console.log(e)
-    log(false, "Compilation error", e.message)
-    return false
-  }
-  log(true, "Compiled contract")
-  
-  contractInterface = web3.eth.contract(JSON.parse(contractCompiled.Game.interface))
-  contractInstance = contractInterface.at(contractAddress)
-  
-  // Update once in case no events have been received yet
-  updateEvent([])
-  // Listen for events
-  contractEvents = contractInstance.allEvents({fromBlock: 0, toBlock: 'latest'},function(error,event){
-    if (error!==null) {
-      log(false, "Event listener error", JSON.stringify(error))
-      return
-    }
-    log(true, "Event", JSON.stringify(event))
-    updateEvent(contractEvents.get())
-  })
-}
-
 function updateEvent(events) {
   // Reset visibility (Hide all dialogs).
   for (let dialogName of ["Join","Propose","Wait","Vote", "Dead"]) {
@@ -251,24 +211,41 @@ function sendProposal() {
   log(true,"Sent ProposeSplit(["+split+"])")
 }
 
-function updateNewBlock(error) {
-  //Check error
-  if (error!==null) {
-    document.getElementById("status").innerHTML="<span style=\"color: #FF0000\">Status: Error</span>"
-    log(false,"Error",JSON.stringify(error))
-  }
-  //Present account information
-  if (web3.eth.defaultAccount!==undefined) {
-    document.getElementById("account").innerHTML="Account: "+web3.eth.defaultAccount
-    document.getElementById("balance").innerHTML="Balance: "+web3.fromWei(web3.eth.getBalance(web3.eth.defaultAccount)).toString()+" ETH"
-  }
-}
 
 window.onload = function () {
-  if (init()!==false) {
-    updateNewBlock(null)
-    web3.eth.filter('latest').watch(updateNewBlock)
+  if (web3.eth.accounts.length===0) {
+    alert("No account set. Please set an account.")
+  } else if (web3.eth.accounts.length===1) {
+    web3.eth.defaultAccount=web3.eth.accounts[0]
+  } else {
+    alert("Multiple accounts set. Please set only one account.")
+    return false
   }
+  
+  // Compile contract and show errors
+  try {
+    contractCompiled = web3.eth.compile.solidity(contractSource)
+  }
+  catch(e) {
+    log(false, "Compilation error", e.message)
+    return
+  }
+  log(true, "Compiled contract")
+  
+  contractInterface = web3.eth.contract(JSON.parse(contractCompiled.Game.interface))
+  contractInstance = contractInterface.at(contractAddress)
+  
+  // Update once in case no events have been received yet
+  updateEvent([])
+  // Listen for events
+  contractEvents = contractInstance.allEvents({fromBlock: 0, toBlock: 'latest'},function(error,event){
+    if (error!==null) {
+      log(false, "Event listener error", JSON.stringify(error))
+      return
+    }
+    log(true, "Event", JSON.stringify(event))
+    updateEvent(contractEvents.get())
+  })
 }
 
 function log(success, title, message) {
