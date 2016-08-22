@@ -1,5 +1,5 @@
 // Insert contract address logged by uploadContract()
-var contractAddress = '0xca83b77aa8666cb580f6fe8a1040424f7883a672'
+var contractAddress = '0x13172081563b2142a342fee16521e1cf450c0098'
 // Compiled contract
 var contractCompiled
 // Contract on blockchain
