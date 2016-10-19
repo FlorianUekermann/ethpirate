@@ -18,7 +18,7 @@ This manual consists of two parts:
 <li>An example game with user interface screenshots, that describes all user interaction in detail.</li>
 </ol>
 <h2>1. The pirate game</h2>
-In the pirate game the player is part of a band of pirates. The group consists of 5 pirates, which are organized in a strict hierachy:
+In the pirate game you are a member of a band of 5 pirates. These pirates have a strict hierachicy:
 <ol>
 <li>Captain</li>
 <li>First mate</li>
@@ -26,44 +26,44 @@ In the pirate game the player is part of a band of pirates. The group consists o
 <li>Pirate 2</li>
 <li>Pirate 3</li>
 </ol>
-<p>The band of pirates found a treasure of 100 coins. The captain decides how many of the coins he wants to share with each individual crew member. After deciding on a split, the crew decides, by open ballot, whether they accept this split proposal or not.<br>
-If half or more pirates vote for accepting the proposal, the game ends and each pirate receives the respective number of coins. If more than half of the pirates vote for rejecting the proposal, the captain is killed. With the position of captain vacant, the first mate becomes the new captian, Pirate 1 becomes the new first mate, etc. The remaining pirates repeat this process until a proposal is accepted.<br>
+<p>Your band of pirates found a treasure chest with 100 coins. The captain has the authority to decide how many of the coins he wants to give to each individual crew member. After the captain decided on a split, the crew determines by open ballot, whether they accept his split proposal or not.<br>
+If half or more pirates vote for accepting the proposal, the game ends and each pirate receives the number of coins the captain promised him. If more than half of the pirates vote for rejecting the proposal, the captain is killed. With the position of captain vacant, the first mate becomes the new captian, Pirate 1 becomes the new first mate, etc. The remaining pirates repeat the process of proposing and voting until a proposal is accepted.<br>
 For every action, the mist browser will ask the player to confirm the resulting transaction and display the corresponding data and transaction fees. Aside from the transaction fee, no value is transferred.<p>
-<p class="note">Note: The captain always votes to accept the proposal. This ensures that the game ends after at most 3 rejected proposals.</p>
+<p class="note">Note: The captain always votes to accept the proposal. This ensures that the game ends after at most 4 proposals.</p>
 <h2>2. Example game and user interface</h2>
 <p>The following screenshots show a whole game from the perspective of one player, who encounters all possible situations that require a player action. Due to the nature of Ethereum, an action will typically take between 10 seconds and a minute to be processed. During this time the user interface will not reflect the action taken by the player.</p>
-<p class="note">Note: Very rarely a transaction can get lost. If you believe this happened, click the button corresponding to your action again. There is no danger in sending redundant actions, since only the first action it received from a player during every step of the game will be processed.</p>
+<p class="note">Note: Very rarely a transaction may get lost. If you believe this happened, click the button corresponding to your action again. There is no danger in sending redundant actions, since only the first action the game receives from a player during every phase of the game will be processed.</p>
 <h3>2.1 Interface overview and joining</h3>
 When the player opens the user interface for the first time, the interface resembles picture below. The user interface consists of three parts:
 <dl>
 <dt>Top (table)</dt>
 <dd>Summarizes all important information about the current situation.</dd>
 <dt>Middle (boxes)</dt>
-<dd>Shows text boxes and buttons, that inform the user about possible actions.</dd>
+<dd>Shows text boxes, that inform the user about possible actions, and shows the corresponding buttons.</dd>
 <dt>Bottom (history)</dt>
 <dd>Shows the history of the game as a list of bullet points. The most recent event is listed on top.</dd>
 </dl>
 Click the join button to participate in the game. The first player to join will be the captian, the second will be first mate etc.
 <img src="01PreJoin.png"/>
-After the joining, the player's table column will contain the word 'You' and the text boxes below the table will inform the player about possible actions. The player does not have to wait for other players to join before taking actions.
+After the joining, the table will contain the word 'You' in the column that shows you rank, promised number of coins etc. The text boxes below the table will inform you about possible actions if there are any. You do not have to wait for other players to join before taking actions.
 <img src="02PostJoin.png"/>
 <h3>2.2 Waiting for a proposal</h3>
-In this example the player was the second participant to join. Therefore there is no possible action until the captain has proposed a split.
+In this example you were the second participant to join the game. There is no possible action until the captain has proposed a split.
 <img src="03Waiting.png"/>
 <h3>2.3 Voting on a proposal</h3>
-Once the captain has proposed a split, the number of coins, that the captain wants to give to each player is shown in the table (see  &quot;Split&quot;-row). The player can now vote to accept or reject the proposal by clicking the respective button in the text box below the table.
+Once the captain has proposed a split, it is shown in the table (see  &quot;Split&quot; row). You can now vote to accept or reject the proposal by clicking the respective button in the text box below the table.
 <img src="04PreVote.png"/>
-Once the game has processed a players vote, a green checkmark (accept) or red cross (reject) appears in the corresponding column of the table  &quot;Votes&quot;-row. In this example the player voted to reject the proposal.
+Once the game has processed your vote, a green checkmark (accept) or red cross (reject) appears in your column of the table's  &quot;Votes&quot; row. In this example you voted to reject the proposal. Other players votes will appear in their respective column, whenever they are received.
 <img src="05PostVote.png"/>
 <h3>2.4 Proposing a split</h3>
-In this example, the previous captains split proposal was rejected. The player is the new captain (note the changed avatars and ranks). To choose a split, the player edits the input fields in the table, that are highlighted by a green outline.
+In this example, the previous captain's split proposal was rejected. As a result, you are the new captain (note the changed avatars and ranks). To choose a split, edit the input fields in the table, that are highlighted by a green outline.
 <img src="06PrePropose.png"/>
-After editing the split proposal, the player clicks on the &quot;Propose split&quot; button in the text box below the table.
+After editing the split proposal, click on the &quot;Propose split&quot; button in the text box below the table.
 <img src="07ChosenPropose.png"/>
 When proposing a split, the captain automatically votes for acceptance and can not take any further action until the vote ends.
 <img src="08PostPropose.png"/>
 <h3>2.5 Payment</h3>
-Once a split proposal was accepted, the player needs to click on the &quot;Get reward&quot; button to receive the ETH corresponding the player's share of the 100 coins .
+Once a split proposal was accepted, you need to click on the &quot;Get reward&quot; button to receive the ETH corresponding the your share of the 100 coins.
 <img src="09Accepted.png"/>
 </body>
 </html>
